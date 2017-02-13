@@ -1,8 +1,8 @@
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.TreeMap;
+import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.function.Predicate;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -16,7 +16,44 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class Wtf {
 
   /********************/
-  /**    Mapper      **/
+  /**    Mapper 1     **/
+  /********************/
+
+  public static class ReverseMapper 
+  extends Mapper<Object, Text, IntWritable, IntWritable> {
+
+    public void map(Object key, Text values, Context context) 
+    throws IOException, InterruptedException {
+      StringTokenizer st = new StringTokenizer(values.toString());
+
+      IntWritable follower = new IntWritable();
+      IntWritable followed = new IntWritable();
+
+      follower.set(Integer.parseInt(st.nextToken()));
+
+      while(st.hasMoreTokens()) {
+        followed.set(Integer.parseInt(st.nextToken()));
+        context.write(followed, follower);
+      }
+    }
+  }
+
+  /**********************/
+  /**      Reducer 1    **/
+  /**********************/
+  
+  public static class ReverseReducer 
+  extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
+    
+    public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
+    throws IOException, InterruptedException {
+
+    }
+
+  }
+
+  /********************/
+  /**    Mapper 2     **/
   /********************/
 
   public static class AllPairsMapper 
@@ -29,18 +66,24 @@ public class Wtf {
   }
 
   /**********************/
-  /**      Reducer     **/
+  /**      Reducer 2    **/
   /**********************/
   
   public static class CountReducer 
   extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
+    
+    public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
+    throws IOException, InterruptedException {
+
+    }
 
   }
+
 
   public static void main(String[] args) 
   throws IOException, InterruptedException, ClassNotFoundException {
     Configuration conf = new Configuration();
-    Job job = Job.getInstance(conf, "people you may know");
+    Job job = Job.getInstance(conf, "who to follow");
     job.setJarByClass(Pymk.class);
     job.setMapperClass(AllPairsMapper.class);
     job.setReducerClass(CountReducer.class);
