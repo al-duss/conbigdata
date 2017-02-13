@@ -25,7 +25,6 @@ public class Wtf {
     public void map(Object key, Text values, Context context) 
     throws IOException, InterruptedException {
       StringTokenizer st = new StringTokenizer(values.toString());
-
       IntWritable follower = new IntWritable();
       IntWritable followed = new IntWritable();
 
@@ -66,7 +65,29 @@ public class Wtf {
 
     public void map(Object key, Text values, Context context) 
     throws IOException, InterruptedException {
+      StringTokenizer st = new new StringTokenizer(values.toString());
 
+      ArrayList<Integer> sameFollowers = new ArrayList<>();
+
+      IntWritable follower1 = new IntWritable();
+      IntWritable follower2 = new IntWritable();
+      IntWritable followed = new IntWritable();
+      followed.set(Integer.parseInt(st.nextToken()));
+
+      while(st.hasMoreTokens()) {
+        follower1.set(Integer.parseInt(st.nextToken()));
+        for (Integer sameFollow : sameFollowers){
+          follower2.set(sameFollow);
+          context.write(follower1, follower2);
+          context.write(follower2, follower1);
+        }
+        sameFollowers.add(follower1.get());
+      }
+      //Have a negative value for all followers on the followed person.
+      for(Integer follower : sameFollowers) {
+        follower1.set(-follower);
+        context.write(followed, follower1);
+      }
     }
   }
 
