@@ -47,7 +47,12 @@ public class Wtf {
     
     public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
     throws IOException, InterruptedException {
-
+      StringBuffer sb = new StringBuffer("");
+      while(values.iterator().hasNext()) {
+        int follower = values.iterator().next().get();
+        sb.append(" "+follower);
+      }
+      context.write(key, new Text(sb.toString()));
     }
 
   }
@@ -84,9 +89,9 @@ public class Wtf {
   throws IOException, InterruptedException, ClassNotFoundException {
     Configuration conf = new Configuration();
     Job job = Job.getInstance(conf, "who to follow");
-    job.setJarByClass(Pymk.class);
-    job.setMapperClass(AllPairsMapper.class);
-    job.setReducerClass(CountReducer.class);
+    job.setJarByClass(Wtf.class);
+    job.setMapperClass(ReverseMapper.class);
+    job.setReducerClass(ReverseReducer.class);
     job.setOutputKeyClass(IntWritable.class);
     job.setOutputValueClass(IntWritable.class);
     FileInputFormat.addInputPath(job, new Path(args[0]));
