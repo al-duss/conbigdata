@@ -143,15 +143,25 @@ public class Wtf {
   public static void main(String[] args) 
   throws IOException, InterruptedException, ClassNotFoundException {
     Configuration conf = new Configuration();
-    Job job = Job.getInstance(conf, "who to follow");
-    job.setJarByClass(Wtf.class);
-    job.setMapperClass(ReverseMapper.class);
-    job.setReducerClass(ReverseReducer.class);
-    job.setOutputKeyClass(IntWritable.class);
-    job.setOutputValueClass(IntWritable.class);
-    FileInputFormat.addInputPath(job, new Path(args[0]));
-    FileOutputFormat.setOutputPath(job, new Path(args[1]));
-    System.exit(job.waitForCompletion(true) ? 0 : 1);
+    Job job1 = Job.getInstance(conf, "who to follow");
+    job1.setJarByClass(Wtf.class);
+    job1.setMapperClass(ReverseMapper.class);
+    job1.setReducerClass(ReverseReducer.class);
+    job1.setOutputKeyClass(IntWritable.class);
+    job1.setOutputValueClass(IntWritable.class);
+    FileInputFormat.addInputPath(job1, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job1, new Path("temp"));
+    job1.waitForCompletion(true);
+
+    Job job2 = Job.getInstance(conf, "who to follow2");
+    job2.setJarByClass(Wtf.class);
+    job2.setMapperClass(AllPairsMapper.class);
+    job2.setReducerClass(FollowReducer.class);
+    job2.setOutputKeyClass(IntWritable.class);
+    job2.setOutputValueClass(IntWritable.class);
+    FileInputFormat.addInputPath(job2, new Path("temp"));
+    FileOutputFormat.setOutputPath(job2, new Path(args[1]));
+    System.exit(job2.waitForCompletion(true) ? 0 : 1);
   }
 
 }
