@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import org.apache.hadoop.conf.Configuration;
@@ -16,7 +17,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class Wtf {
 
   /********************/
-  /**    Mapper 1     **/
+  /**    Mapper 1    **/
   /********************/
 
   public static class ReverseMapper 
@@ -38,7 +39,7 @@ public class Wtf {
   }
 
   /**********************/
-  /**      Reducer 1    **/
+  /**      Reducer 1   **/
   /**********************/
   
   public static class ReverseReducer 
@@ -57,7 +58,7 @@ public class Wtf {
   }
 
   /********************/
-  /**    Mapper 2     **/
+  /**    Mapper 2    **/
   /********************/
 
   public static class AllPairsMapper 
@@ -92,19 +93,50 @@ public class Wtf {
   }
 
   /**********************/
-  /**      Reducer 2    **/
+  /**      Reducer 2   **/
   /**********************/
   
-  public static class CountReducer 
+  public static class FollowReducer 
   extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
     
     public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
     throws IOException, InterruptedException {
-
+      TreeMap<Integer, Integer> map = new TreeMap<>();
+      while(values.iterator().hasNext()) {
+        int recommended = values.iterator().next().get();
+        Integer count = map.get(recommended);
+        if (count == null) {
+          map.put(recommended,1);
+        } else {
+          map.put(recommended,count+1);
+        }
+      }
+      removeAlreadyFollowing(map);
+      for(Map.Entry<Integer,Integer> entry: map.entrySet()) {
+        StringBuffer sb = new StringBuffer("");
+        sb.append(" "+key.toString()+"("+entry.getValue()+")");
+        context.write(entry.getKey(),new Text(sb.toString()));
+      }
     }
-
   }
 
+  public static void removeAlreadyFollowing(TreeMap<Integer, Integer> map){
+    for(Map.Entry<Integer,Integer> entry : map.entrySet()) {
+      //TreeMap already sorts, therefore can exit loop once positive
+      if(entry.getKey() > 0){
+        break;
+      }
+      //Put a 0 on entries that need to be removed
+      map.put(-entry.getKey(),0);
+    }
+    //Remove entries that are negative or have a value of 0
+    for(Iterator<Map.Entry<Integer, Integer>> it = map.entrySet().iterator(); it.hasNext(); ) {
+      Map.Entry<Integer,Integer> entry = it.next();
+      if(entry.getKey() < 0 || entry.getValue() == 0){
+        it.remove();
+      }
+    }
+  }
 
   public static void main(String[] args) 
   throws IOException, InterruptedException, ClassNotFoundException {
