@@ -19,6 +19,7 @@ public class Wtf {
   /********************/
   /**    Mapper 1    **/
   /********************/
+  // Outputs pairs of followed with all its followers.
 
   public static class ReverseMapper 
   extends Mapper<Object, Text, IntWritable, IntWritable> {
@@ -41,6 +42,7 @@ public class Wtf {
   /**********************/
   /**      Reducer 1   **/
   /**********************/
+  //Creates a list of the followed with all his followers.
   
   public static class ReverseReducer 
   extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
@@ -60,7 +62,7 @@ public class Wtf {
   /********************/
   /**    Mapper 2    **/
   /********************/
-
+  //Having reversed the map in the previous step, we emit all pairs of followers.
   public static class AllPairsMapper 
   extends Mapper<Object, Text, IntWritable, IntWritable> {
 
@@ -68,13 +70,16 @@ public class Wtf {
     throws IOException, InterruptedException {
       StringTokenizer st = new StringTokenizer(values.toString());
 
+      //List of the sameFollowers to not go over the same person twice.
       ArrayList<Integer> sameFollowers = new ArrayList<>();
 
       IntWritable follower1 = new IntWritable();
       IntWritable follower2 = new IntWritable();
+      //Setting the person being followed immediately to be able to set negatives.
       IntWritable followed = new IntWritable();
       followed.set(Integer.parseInt(st.nextToken()));
 
+      //Iterate through the tokens to see the followers.
       while(st.hasMoreTokens()) {
         follower1.set(Integer.parseInt(st.nextToken()));
         for (Integer sameFollow : sameFollowers){
@@ -98,13 +103,15 @@ public class Wtf {
   
   public static class FollowReducer 
   extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
-    
+
     public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
     throws IOException, InterruptedException {
       IntWritable follower = new IntWritable();
+      //Use of TreeMap to sort the followers, and iterate to see the recommendations linked to each follower.
       TreeMap<Integer, Integer> map = new TreeMap<>();
       while(values.iterator().hasNext()) {
         int recommended = values.iterator().next().get();
+        //Checks if the recommended already existed and increments it, or puts a 1 to it.
         Integer count = map.get(recommended);
         if (count == null) {
           map.put(recommended,1);
@@ -112,11 +119,13 @@ public class Wtf {
           map.put(recommended,count+1);
         }
       }
+      //Helper function to remove all the users which aren't relevant.
       removeAlreadyFollowing(map);
+      //Output the recommendations 
       for(Map.Entry<Integer,Integer> entry: map.entrySet()) {
         follower.set(entry.getKey());
         StringBuffer sb = new StringBuffer("");
-        sb.append(" "+key.toString()+"("+entry.getValue()+")");
+        sb.append(" " + key.toString() + "(" + entry.getValue() + ")");
         context.write(follower, new Text(sb.toString()));
       }
     }
@@ -152,7 +161,7 @@ public class Wtf {
     FileInputFormat.addInputPath(job1, new Path(args[0]));
     FileOutputFormat.setOutputPath(job1, new Path("temp"));
     job1.waitForCompletion(true);
-
+    //Second job chaining.
     Job job2 = Job.getInstance(conf, "who to follow2");
     job2.setJarByClass(Wtf.class);
     job2.setMapperClass(AllPairsMapper.class);
