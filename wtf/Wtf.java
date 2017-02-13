@@ -66,7 +66,7 @@ public class Wtf {
 
     public void map(Object key, Text values, Context context) 
     throws IOException, InterruptedException {
-      StringTokenizer st = new new StringTokenizer(values.toString());
+      StringTokenizer st = new StringTokenizer(values.toString());
 
       ArrayList<Integer> sameFollowers = new ArrayList<>();
 
@@ -101,6 +101,7 @@ public class Wtf {
     
     public void reduce(IntWritable key, Iterable<IntWritable> values, Context context)
     throws IOException, InterruptedException {
+      IntWritable follower = new IntWritable();
       TreeMap<Integer, Integer> map = new TreeMap<>();
       while(values.iterator().hasNext()) {
         int recommended = values.iterator().next().get();
@@ -113,9 +114,10 @@ public class Wtf {
       }
       removeAlreadyFollowing(map);
       for(Map.Entry<Integer,Integer> entry: map.entrySet()) {
+        follower.set(entry.getKey());
         StringBuffer sb = new StringBuffer("");
         sb.append(" "+key.toString()+"("+entry.getValue()+")");
-        context.write(entry.getKey(),new Text(sb.toString()));
+        context.write(follower, new Text(sb.toString()));
       }
     }
   }
