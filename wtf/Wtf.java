@@ -123,7 +123,7 @@ public class Wtf {
   }
 
   public static void removeAlreadyFollowing(TreeMap<Integer, Integer> map){
-    for(Map.Entry<Integer,Integer> entry : map.entrySet()) {
+    for(Map.Entry<Integer,Integer> entry : new TreeMap<Integer,Integer>(map).entrySet()) {
       //TreeMap already sorts, therefore can exit loop once positive
       if(entry.getKey() > 0){
         break;
